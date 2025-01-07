@@ -1,0 +1,33 @@
+name: Commit Message Check
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  check-commit-message:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Validate Commit Messages
+        run: |
+          INVALID_COMMIT=false
+          for COMMIT_MESSAGE in $(git log origin/HEAD..HEAD --pretty=%B); do
+            echo "Checking commit: $COMMIT_MESSAGE"
+            if [[ ! "$COMMIT_MESSAGE" =~ ^(feat|fix|docs|style|refactor|test|chore): ]]; then
+              echo "❌ Invalid commit message format: $COMMIT_MESSAGE"
+              echo "Commit messages should follow the format: <type>: <description>"
+              echo "Allowed types: feat, fix, docs, style, refactor, test, chore."
+              INVALID_COMMIT=true
+            fi
+          done
+          if [ "$INVALID_COMMIT" = true ]; then
+            exit 1
+          fi
